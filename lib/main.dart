@@ -1,6 +1,10 @@
+import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_first/screens/auth_page/auth_page.dart';
 import 'package:firebase_first/screens/home_screen/home_screen.dart';
 import 'package:firebase_first/screens/login_screen/login_screen.dart';
+import 'package:firebase_first/screens/testing_home_screen/testing_home_screen.dart';
+import 'package:firebase_first/utils/helper.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 
@@ -18,13 +22,16 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+
     return MaterialApp(
+      scaffoldMessengerKey: Helper.messengerKey,
       navigatorKey: navigatorKey,
       title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
       home: Scaffold(
+        backgroundColor: Color(0xFF363636),
         body: StreamBuilder<User?>(
           stream: FirebaseAuth.instance.authStateChanges(),
           builder: (context, snapshot) {
@@ -33,9 +40,9 @@ class MyApp extends StatelessWidget {
             } else if(snapshot.hasError) {
               return Center(child: Text("something went wrong"),);
             } else if (snapshot.hasData) {
-              return HomeScreen();
+              return TestingHomeScreen();
             } else {
-              return LoginScreen();
+              return AuthPage();
             }
           },
         ),

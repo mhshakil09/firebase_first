@@ -7,9 +7,11 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // bottomNavigationBar: CustomBottomNavigationBar(index: 1),
       appBar: AppBar(
         title: Text("Home"),
       ),
+      backgroundColor: Color(0xFF363636),
       body: Body(),
     );
   }

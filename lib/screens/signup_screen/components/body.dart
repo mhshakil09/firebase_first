@@ -1,27 +1,26 @@
+import 'package:email_validator/email_validator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_first/main.dart';
 import 'package:firebase_first/firebase_firestore/services/authentication_services.dart';
 import 'package:firebase_first/utils/helper.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_first/screens/login_screen/components/background.dart';
+import 'package:firebase_first/screens/signup_screen/components/background.dart';
 
 class Body extends StatefulWidget {
-  final VoidCallback onClickedSignUp;
+  final Function onClickedSignIn;
 
-  const Body({
-    Key? key,
-    required this.onClickedSignUp,
-  }) : super(key: key);
+  const Body({Key? key, required this.onClickedSignIn}) : super(key: key);
 
   @override
   State<Body> createState() => _BodyState();
 }
 
 class _BodyState extends State<Body> {
+  final formKey = GlobalKey<FormState>();
   final _auth = AuthenticationServices();
   final emailController = TextEditingController();
-  final passwordController = TextEditingController(text: 'asdzxc');
+  final passwordController = TextEditingController();
 
   final TextStyle _textStyle = const TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: Colors.green);
 
@@ -37,7 +36,9 @@ class _BodyState extends State<Body> {
   Widget build(BuildContext context) {
     return Background(
       child: SingleChildScrollView(
-          padding: EdgeInsets.all(16),
+        padding: EdgeInsets.all(16),
+        child: Form(
+          key: formKey,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -55,34 +56,32 @@ class _BodyState extends State<Body> {
                 style: _textStyle,
               ),
               SizedBox(height: 40),
-              TextField(
-                controller: emailController,keyboardType: TextInputType.emailAddress,
-                cursorColor: Colors.blue,
+              TextFormField(
+                controller: emailController,
                 textInputAction: TextInputAction.next,
                 style: TextStyle(color: Colors.white, fontSize: 18),
                 decoration: InputDecoration(
-                  label: Text(
-                    "Email",
-                    style: TextStyle(
-                      color: Colors.white,
-                    ),
-                  ),
+                  label: Text("Email", style: TextStyle(color: Colors.white)),
                 ),
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                validator: (email) => email != null && !EmailValidator.validate(email)
+                    ? 'Enter a valid email'
+                    : null,
               ),
               SizedBox(height: 4),
-              TextField(
+              TextFormField(
                 controller: passwordController,
                 textInputAction: TextInputAction.done,
                 style: TextStyle(color: Colors.white, fontSize: 18),
                 decoration: InputDecoration(
-                  label: Text(
-                    "Password",
-                    style: TextStyle(
-                      color: Colors.white,
-                    ),
-                  ),
+                  labelStyle: TextStyle(color: Colors.white),
+                  label: Text("Password", style: TextStyle(color: Colors.white)),
                 ),
                 obscureText: true,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                validator: (password) => password != null && password.length < 6
+                    ? 'Minimum 6 character is needed'
+                    : null,
               ),
               SizedBox(height: 40),
               ElevatedButton.icon(
@@ -92,10 +91,13 @@ class _BodyState extends State<Body> {
                   size: 24,
                 ),
                 label: Text(
-                  'Sign in',
+                  'Sign up',
                   style: TextStyle(fontSize: 22),
                 ),
-                onPressed: () async {
+                onPressed: () {
+                  final isValid = formKey.currentState!.validate();
+                  if(!isValid) return;
+
                   showDialog(
                     context: context,
                     barrierDismissible: false,
@@ -105,33 +107,32 @@ class _BodyState extends State<Body> {
                   );
 
                   try {
-                    await _auth.signIn(emailController.text.trim(), passwordController.text.trim());
+                    _auth.signUp(emailController.text.trim(), passwordController.text.trim());
                   } on FirebaseAuthException catch (error) {
-                    print("error: "+error.toString());
-                    print("error: "+error.code.toString());
-
-                    // Helper.showSnackBar(error.message);
-                    Helper.showToastWithDismissible(context, error.message.toString());
+                    print(error);
+                    Helper.showSnackBar(error.message);
                   }
+
                   navigatorKey.currentState!.popUntil((route) => route.isFirst);
 
                 },
               ),
               SizedBox(height: 40),
               RichText(
-                  text: TextSpan(style: TextStyle(color: Colors.white, fontSize: 16), text: "No account? ", children: [
+                  text: TextSpan(style: TextStyle(color: Colors.white, fontSize: 16), text: "Already have account? ", children: [
                 TextSpan(
-                    recognizer: TapGestureRecognizer()..onTap = widget.onClickedSignUp,
-                    text: "Sign up",
+                    recognizer: TapGestureRecognizer()..onTap = widget.onClickedSignIn as GestureTapCallback?,
+                    text: "Log in",
                     style: TextStyle(
                       decoration: TextDecoration.underline,
                       color: Theme.of(context).colorScheme.secondaryContainer,
                     ))
               ]))
             ],
-          )),
+          ),
+        ),
+      ),
     );
   }
-
 
 }
